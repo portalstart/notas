@@ -1543,30 +1543,49 @@ async function createMaestro(formData) {
             app.data.actividades = data || [];
         }
 
-        async function createActividad(formData) {
-            const actividad = await insertData('actividades', {
-                unidad_id: formData.get('unidad_id'),
-                curso_id: formData.get('curso_id'),
-                titulo: formData.get('titulo'),
-                descripcion: formData.get('descripcion'),
-                tipo: formData.get('tipo'),
-                puntaje_maximo: parseFloat(formData.get('puntaje_maximo')),
-                fecha_entrega: formData.get('fecha_entrega') || null,
-                created_by: app.currentUser.id
-            });
-            
-            if (actividad) {
-                await loadActividades(formData.get('curso_id'), formData.get('unidad_id'));
-                verDetallesCurso(formData.get('curso_id'));
-            }
-            return actividad;
-        }
+        // ==========================================
+// FUNCIÓN createActividad (REEMPLAZAR)
+// ==========================================
+async function createActividad(formData) {
+    try {
+        const cursoId = formData.get('curso_id');
+        const unidadId = formData.get('unidad_id');
 
+        console.log('📝 Creando actividad para curso:', cursoId, 'y unidad:', unidadId);
+        
+        const actividad = await insertData('actividades', {
+            unidad_id: unidadId,
+            curso_id: cursoId,
+            titulo: formData.get('titulo'),
+            descripcion: formData.get('descripcion'),
+            tipo: formData.get('tipo'),
+            puntaje_maximo: parseFloat(formData.get('puntaje_maximo')),
+            fecha_entrega: formData.get('fecha_entrega') || null,
+            created_by: app.currentUser.id // Asegurar que el creador se asigna
+        });
+        
+        if (actividad) {
+            console.log('✅ Actividad creada:', actividad);
+            await loadActividades(cursoId); // Recargar actividades del curso
+            await verDetallesCurso(cursoId); // Renderizar de nuevo la vista del curso
+        }
+        return actividad;
+
+    } catch (error) {
+        console.error('❌ Error creando actividad:', error);
+        showNotification('Error al crear la actividad: ' + error.message, 'danger');
+        return null;
+    }
+}
+
+        // ==========================================
+        // FUNCIÓN deleteActividad (REEMPLAZAR)
+        // ==========================================
         async function deleteActividad(id, cursoId) {
             const success = await deleteData('actividades', id);
             if (success) {
                 await loadActividades(cursoId);
-                verDetallesCurso(cursoId);
+                await verDetallesCurso(cursoId);
             }
         }
 
