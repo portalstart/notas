@@ -1,0 +1,3714 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colplex - Plataforma Educativa</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        :root {
+            --facebook-blue: #1877f2;
+            --facebook-blue-dark: #166fe5;
+            --facebook-blue-light: #e7f3ff;
+            --bg-primary: #f0f2f5;
+            --bg-white: #ffffff;
+            --text-primary: #050505;
+            --text-secondary: #65676b;
+            --border-color: #dddfe2;
+            --success: #42b72a;
+            --danger: #e4304d;
+            --warning: #f7b928;
+            --info: #17a2b8;
+            --shadow: 0 2px 4px rgba(0,0,0,.1), 0 8px 16px rgba(0,0,0,.1);
+            --radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .items-center { align-items: center; }
+        .gap-2 { gap: 1rem; }
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .p-2 { padding: 1rem; }
+
+        .navbar {
+            background: var(--bg-white);
+            box-shadow: var(--shadow);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--facebook-blue);
+            text-decoration: none;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--facebook-blue);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .main-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 2rem auto;
+            gap: 1rem;
+            padding: 0 1rem;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--bg-white);
+            border-radius: var(--radius);
+            padding: 1rem;
+            height: fit-content;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 80px;
+        }
+
+        .sidebar-item {
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-item:hover {
+            background: var(--bg-primary);
+        }
+
+        .sidebar-item.active {
+            background: var(--facebook-blue-light);
+            color: var(--facebook-blue);
+            font-weight: 600;
+        }
+
+        .content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .card {
+            background: var(--bg-white);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+        }
+
+        .card-header {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--facebook-blue), var(--facebook-blue-dark));
+            color: white;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-card h3 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .curso-card {
+            background: var(--bg-white);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border-left: 4px solid var(--facebook-blue);
+        }
+
+        .curso-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,.15);
+        }
+
+        .curso-disponible {
+            background: var(--bg-primary);
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 3px solid var(--info);
+        }
+
+        .actividad-item {
+            background: var(--bg-primary);
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            border-left: 3px solid var(--facebook-blue);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--facebook-blue);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--facebook-blue);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--facebook-blue-dark);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .btn-info {
+            background: var(--info);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg-primary);
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tbody tr:hover {
+            background: var(--bg-primary);
+        }
+
+        /* Tabla de libro de calificaciones */
+        .gradebook-table {
+            font-size: 0.875rem;
+        }
+
+        .gradebook-table th {
+            position: sticky;
+            top: 0;
+            background: var(--facebook-blue);
+            color: white;
+            z-index: 10;
+        }
+
+        .gradebook-table th:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 11;
+        }
+
+        .gradebook-table td:first-child {
+            position: sticky;
+            left: 0;
+            background: var(--bg-white);
+            font-weight: 600;
+        }
+
+        .gradebook-table input {
+            width: 60px;
+            padding: 0.25rem;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .gradebook-table input:focus {
+            outline: none;
+            border-color: var(--facebook-blue);
+            background: var(--facebook-blue-light);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: var(--bg-white);
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            line-height: 1;
+        }
+
+        .close-modal:hover {
+            color: var(--danger);
+        }
+
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--facebook-blue), var(--facebook-blue-dark));
+        }
+
+        .login-box {
+            background: var(--bg-white);
+            padding: 3rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .login-box h1 {
+            text-align: center;
+            color: var(--facebook-blue);
+            margin-bottom: 2rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .badge-primary { background: var(--facebook-blue-light); color: var(--facebook-blue); }
+        .badge-success { background: #d4edda; color: var(--success); }
+        .badge-danger { background: #f8d7da; color: var(--danger); }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-info { background: #d1ecf1; color: var(--info); }
+
+        .alert {
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--facebook-blue);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--bg-white);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            z-index: 3000;
+            animation: slideIn 0.3s;
+            min-width: 300px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .nota-input {
+            width: 80px;
+            text-align: center;
+        }
+
+        .promedio-display {
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 1rem;
+            border-radius: var(--radius);
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .promedio-excelente {
+            background: var(--success);
+            color: white;
+        }
+
+        .promedio-bueno {
+            background: var(--facebook-blue);
+            color: white;
+        }
+
+        .promedio-regular {
+            background: var(--warning);
+            color: white;
+        }
+
+        .promedio-bajo {
+            background: var(--danger);
+            color: white;
+        }
+
+        .asignacion-card {
+            background: var(--bg-primary);
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .estudiante-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .estudiante-item:last-child {
+            border-bottom: none;
+        }
+
+        .estudiante-checkbox {
+            margin-right: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                position: static;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Cargando aplicación...</p>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURACIÓN
+        // ==========================================
+        const SUPABASE_URL = 'https://hzqnvxalfiulgzncqjao.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6cW52eGFsZml1bGd6bmNxamFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwNDYwMTcsImV4cCI6MjA3ODYyMjAxN30.o_JipVBWeOb1kYfDrfJYJdOn-YHZUIBhJWG9PTYMbmE';
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ==========================================
+        // ESTADO GLOBAL
+        // ==========================================
+        const app = {
+            currentUser: null,
+            currentView: 'dashboard',
+            selectedCurso: null,
+            selectedUnidad: null,
+            data: {
+                cursos: [],
+                estudiantes: [],
+                maestros: [],
+                grados: [],
+                secciones: [],
+                unidades: [],
+                actividades: [],
+                notas: [],
+                misCursos: [],
+                asignaciones: [],
+                inscripciones: [],
+                cursosDisponibles: [],
+                institucion: null
+            }
+        };
+
+        // ==========================================
+        // FUNCIONES DE UTILIDAD
+        // ==========================================
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification alert-${type}`;
+            notification.innerHTML = `
+                <strong>${type === 'success' ? '✅' : type === 'danger' ? '❌' : 'ℹ️'}</strong>
+                ${message}
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 4000);
+        }
+
+        function showLoading() {
+            return `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Cargando...</p>
+                </div>
+            `;
+        }
+
+        function openModal(content) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `<div class="modal-content">${content}</div>`;
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+            document.body.appendChild(modal);
+            return modal;
+        }
+
+        function closeModal(modal) {
+            if (modal) modal.remove();
+        }
+
+        function getPromedioClass(promedio) {
+            const p = parseFloat(promedio);
+            if (p >= 90) return 'promedio-excelente';
+            if (p >= 75) return 'promedio-bueno';
+            if (p >= 60) return 'promedio-regular';
+            return 'promedio-bajo';
+        }
+
+        // ==========================================
+        // CRUD GENÉRICO
+        // ==========================================
+        async function getData(table, filters = {}, select = '*') {
+            try {
+                let query = supabaseClient.from(table).select(select);
+                Object.keys(filters).forEach(key => {
+                    query = query.eq(key, filters[key]);
+                });
+                const { data, error } = await query;
+                if (error) throw error;
+                return data || [];
+            } catch (error) {
+                console.error(`Error obteniendo ${table}:`, error);
+                return [];
+            }
+        }
+
+        async function insertData(table, data) {
+            try {
+                const { data: result, error } = await supabaseClient
+                    .from(table)
+                    .insert(data)
+                    .select();
+                if (error) throw error;
+                showNotification('Registro creado exitosamente', 'success');
+                return result[0];
+            } catch (error) {
+                console.error('Error insertando:', error);
+                showNotification('Error: ' + error.message, 'danger');
+                return null;
+            }
+        }
+
+        async function updateData(table, id, data) {
+            try {
+                const { error } = await supabaseClient
+                    .from(table)
+                    .update(data)
+                    .eq('id', id);
+                if (error) throw error;
+                showNotification('Registro actualizado exitosamente', 'success');
+                return true;
+            } catch (error) {
+                console.error('Error actualizando:', error);
+                showNotification('Error: ' + error.message, 'danger');
+                return false;
+            }
+        }
+
+        async function deleteData(table, id) {
+            if (!confirm('¿Estás seguro de eliminar este registro?')) return false;
+            try {
+                const { error } = await supabaseClient
+                    .from(table)
+                    .delete()
+                    .eq('id', id);
+                if (error) throw error;
+                showNotification('Registro eliminado exitosamente', 'success');
+                return true;
+            } catch (error) {
+                console.error('Error eliminando:', error);
+                showNotification('Error: ' + error.message, 'danger');
+                return false;
+            }
+        }
+
+        // ==========================================
+        // AUTENTICACIÓN
+        // ==========================================
+        async function login(email, password) {
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email.trim(),
+                    password: password
+                });
+                if (error) {
+                    console.error('Error de login:', error);
+                    showNotification('Credenciales incorrectas', 'danger');
+                    return false;
+                }
+                showNotification('¡Bienvenido!', 'success');
+                return true;
+            } catch (error) {
+                showNotification('Error al iniciar sesión', 'danger');
+                return false;
+            }
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            showNotification('Sesión cerrada', 'success');
+        }
+
+        async function loadUserProfile(userId) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+                if (error) throw error;
+                if (data) {
+                    app.currentUser = data;
+                    await loadInstitution();
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Error cargando perfil:', error);
+                return false;
+            }
+        }
+
+        async function loadInstitution() {
+            try {
+                const { data } = await supabaseClient
+                    .from('instituciones')
+                    .select('*')
+                    .limit(1)
+                    .single();
+                if (data) app.data.institucion = data;
+            } catch (error) {
+                console.log('No se encontró institución');
+            }
+        }
+
+        // ==========================================
+        // FUNCIONES DE DATOS
+        // ==========================================
+
+        // CURSOS
+        async function loadCursos() {
+            app.data.cursos = await getData('cursos');
+        }
+
+        async function createCurso(formData) {
+            try {
+                const curso = await insertData('cursos', {
+                    nombre: formData.get('nombre'),
+                    codigo: formData.get('codigo'),
+                    descripcion: formData.get('descripcion'),
+                    grado_id: formData.get('grado_id') || null,
+                    color: formData.get('color') || '#1877f2'
+                });
+                
+                if (curso) {
+                    console.log('✅ Curso creado:', curso);
+                    await loadCursos();
+                    renderView('cursos');
+                }
+                return curso;
+            } catch (error) {
+                console.error('❌ Error creando curso:', error);
+                showNotification('Error al crear curso: ' + error.message, 'danger');
+                return null;
+            }
+        }
+
+        async function editCurso(id) {
+            const curso = app.data.cursos.find(c => c.id === id);
+            if (!curso) return;
+
+            await loadGrados();
+
+            const modal = openModal(`
+                <div class="modal-header">
+                    <h2>Editar Curso</h2>
+                    <button class="close-modal" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <form id="editCursoForm">
+                    <div class="form-group">
+                        <label class="form-label">Nombre del Curso *</label>
+                        <input type="text" class="form-input" name="nombre" value="${curso.nombre}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Código</label>
+                        <input type="text" class="form-input" name="codigo" value="${curso.codigo || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Grado</label>
+                        <select class="form-select" name="grado_id">
+                            <option value="">Sin grado asignado</option>
+                            ${app.data.grados.map(g => `
+                                <option value="${g.id}" ${curso.grado_id === g.id ? 'selected' : ''}>
+                                    ${g.nombre}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-textarea" name="descripcion">${curso.descripcion || ''}</textarea>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById('editCursoForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const success = await updateData('cursos', id, {
+                    nombre: formData.get('nombre'),
+                    codigo: formData.get('codigo'),
+                    descripcion: formData.get('descripcion'),
+                    grado_id: formData.get('grado_id') || null
+                });
+                if (success) {
+                    closeModal(modal);
+                    await loadCursos();
+                    renderView('cursos');
+                }
+            });
+        }
+
+        async function deleteCurso(id) {
+            const success = await deleteData('cursos', id);
+            if (success) {
+                await loadCursos();
+                renderView('cursos');
+            }
+        }
+
+        // ESTUDIANTES
+        // ==========================================
+// FUNCIÓN loadEstudiantes CORREGIDA
+// ==========================================
+        async function loadEstudiantes() {
+            try {
+                console.log('🔄 Cargando estudiantes...');
+                
+                // OPCIÓN 1: Sin join (siempre funciona)
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('rol', 'estudiante')
+                    .order('created_at', { ascending: false });
+                
+                if (error) {
+                    console.error('❌ Error cargando estudiantes:', error);
+                    
+                    // Mostrar detalles del error
+                    console.error('Detalles del error:', {
+                        message: error.message,
+                        details: error.details,
+                        hint: error.hint,
+                        code: error.code
+                    });
+                    
+                    app.data.estudiantes = [];
+                    return [];
+                }
+                
+                app.data.estudiantes = data || [];
+                console.log(`✅ ${app.data.estudiantes.length} estudiantes cargados`);
+                
+                // Cargar nombres de grados por separado si existen
+                if (app.data.estudiantes.length > 0) {
+                    const gradoIds = [...new Set(app.data.estudiantes
+                        .map(e => e.grado_id)
+                        .filter(id => id))];
+                    
+                    if (gradoIds.length > 0) {
+                        const { data: gradosData } = await supabaseClient
+                            .from('grados')
+                            .select('id, nombre')
+                            .in('id', gradoIds);
+                        
+                        if (gradosData) {
+                            const gradosMap = {};
+                            gradosData.forEach(g => {
+                                gradosMap[g.id] = g.nombre;
+                            });
+                            
+                            // Agregar nombre de grado a cada estudiante
+                            app.data.estudiantes = app.data.estudiantes.map(e => ({
+                                ...e,
+                                grado_nombre: e.grado_id ? gradosMap[e.grado_id] : null
+                            }));
+                        }
+                    }
+                }
+                
+                return app.data.estudiantes;
+                
+            } catch (error) {
+                console.error('❌ Error en loadEstudiantes:', error);
+                app.data.estudiantes = [];
+                return [];
+            }
+        }
+
+       // ==========================================
+// FUNCIÓN createEstudiante (CORREGIDA - SINCRONIZADA)
+// ==========================================
+async function createEstudiante(formData) {
+  try {
+    const email = formData.get('email');
+    const password = formData.get('password');
+    const nombreCompleto = formData.get('nombre_completo');
+    const codigoEstudiante = formData.get('codigo_estudiante');
+    const gradoId = formData.get('grado_id') || null;
+
+    console.log('📝 Creando estudiante:', email);
+
+    // 1) Crear usuario en auth
+    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          nombre_completo: nombreCompleto,
+          rol: 'estudiante'
+        }
+      }
+    });
+
+    if (authError && !String(authError.message).toLowerCase().includes('already')) {
+      throw new Error(authError.message);
+    }
+
+    // 2) Obtener el ID del usuario
+    const { data: userData, error: userError } = await supabaseClient.rpc('get_user_id_by_email', { p_email: email });
+    
+    if (userError || !userData) {
+      throw new Error('No se pudo encontrar el usuario recién creado.');
+    }
+    const userId = userData;
+    console.log('✅ ID de estudiante obtenido:', userId);
+
+    // 3) Crear/actualizar perfil
+    const { error: perfilError } = await supabaseClient
+      .from('profiles')
+      .upsert(
+        {
+          id: userId,
+          email,
+          nombre_completo: nombreCompleto,
+          rol: 'estudiante',
+          codigo_estudiante: codigoEstudiante,
+          grado_id: gradoId,
+          activo: true
+        },
+        { onConflict: 'id' }
+      );
+
+    if (perfilError) {
+      throw new Error('No se pudo crear/actualizar el perfil: ' + perfilError.message);
+    }
+
+    console.log('✅ Perfil de estudiante creado/actualizado.');
+
+    // 4) Refrescar UI
+    await loadEstudiantes();
+    showNotification('Estudiante creado exitosamente', 'success');
+    await renderView('estudiantes');
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error completo en createEstudiante:', error);
+    showNotification('Error al crear estudiante: ' + error.message, 'danger');
+    return false;
+  }
+}
+
+        async function editEstudiante(id) {
+            const estudiante = app.data.estudiantes.find(e => e.id === id);
+            if (!estudiante) return;
+
+            await loadGrados();
+
+            const modal = openModal(`
+                <div class="modal-header">
+                    <h2>Editar Estudiante</h2>
+                    <button class="close-modal" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <form id="editEstudianteForm">
+                    <div class="form-group">
+                        <label class="form-label">Nombre Completo *</label>
+                        <input type="text" class="form-input" name="nombre_completo" value="${estudiante.nombre_completo}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Código Estudiante</label>
+                        <input type="text" class="form-input" name="codigo_estudiante" value="${estudiante.codigo_estudiante || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Grado</label>
+                        <select class="form-select" name="grado_id">
+                            <option value="">Sin grado asignado</option>
+                            ${app.data.grados.map(g => `
+                                <option value="${g.id}" ${estudiante.grado_id === g.id ? 'selected' : ''}>
+                                    ${g.nombre}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Estado</label>
+                        <select class="form-select" name="activo">
+                            <option value="true" ${estudiante.activo ? 'selected' : ''}>Activo</option>
+                            <option value="false" ${!estudiante.activo ? 'selected' : ''}>Inactivo</option>
+                        </select>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById('editEstudianteForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const success = await updateData('profiles', id, {
+                    nombre_completo: formData.get('nombre_completo'),
+                    codigo_estudiante: formData.get('codigo_estudiante'),
+                    grado_id: formData.get('grado_id') || null,
+                    activo: formData.get('activo') === 'true'
+                });
+                if (success) {
+                    closeModal(modal);
+                    await loadEstudiantes();
+                    renderView('estudiantes');
+                }
+            });
+        }
+
+        async function deleteEstudiante(id) {
+            const success = await deleteData('profiles', id);
+            if (success) {
+                await loadEstudiantes();
+                renderView('estudiantes');
+            }
+        }
+
+        // MAESTROS
+        // ==========================================
+// FUNCIÓN loadMaestros CORREGIDA
+// ==========================================
+async function loadMaestros() {
+    try {
+        console.log('🔄 Cargando maestros...');
+        
+        const { data, error } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('rol', 'maestro')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('❌ Error cargando maestros:', error);
+            app.data.maestros = [];
+            return [];
+        }
+
+        app.data.maestros = data || [];
+        console.log(`✅ ${app.data.maestros.length} maestros cargados`);
+        return app.data.maestros;
+
+    } catch (error) {
+        console.error('❌ Error en loadMaestros:', error);
+        app.data.maestros = [];
+        return [];
+    }
+}
+
+    // ==========================================
+// FUNCIÓN createMaestro CORREGIDA
+// ==========================================
+// ==========================================
+// FUNCIÓN createMaestro (robusta y definitiva)
+// ==========================================
+// ==========================================
+// FUNCIÓN createMaestro (VERSIÓN FINAL CORREGIDA)
+// - Corregida la errata que causaba el bloqueo.
+// ==========================================
+// ==========================================
+// FUNCIÓN createMaestro (CORREGIDA - SINCRONIZADA)
+// ==========================================
+async function createMaestro(formData) {
+  try {
+    const email = (formData.get('email') || '').trim();
+    const password = (formData.get('password') || '');
+    const nombreCompleto = (formData.get('nombre_completo') || '').trim();
+    const telefono = ((formData.get('telefono') || '').trim()) || null;
+
+    if (!email || !password || !nombreCompleto) {
+      showNotification('Por favor completa nombre, email y contraseña', 'danger');
+      return false;
+    }
+
+    console.log('📝 Creando maestro:', email);
+
+    // 1) Crear usuario en auth. Esto es lo primero y más importante.
+    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          nombre_completo: nombreCompleto,
+          rol: 'maestro'
+        }
+      }
+    });
+
+    if (authError) {
+      // Si el usuario ya existe, no es un error fatal.
+      if (String(authError.message).toLowerCase().includes('already')) {
+        console.warn('⚠️ Usuario ya existe en auth. Se procederá a actualizar el perfil.');
+      } else {
+        // Otro error de signUp sí es fatal.
+        throw new Error(authError.message);
+      }
+    }
+    
+    // 2) Obtener el ID del usuario, ya sea recién creado o existente.
+    // Usamos rpc para llamar a una función que obtiene el ID de forma segura.
+    const { data: userData, error: userError } = await supabaseClient.rpc('get_user_id_by_email', { p_email: email });
+
+    if (userError || !userData) {
+      console.error('❌ Error obteniendo ID de usuario:', userError);
+      throw new Error('No se pudo encontrar el usuario en el sistema.');
+    }
+
+    const userId = userData;
+    console.log('✅ ID de usuario obtenido:', userId);
+
+    // 3) Crear/actualizar el perfil en "profiles" AHORA que sabemos que el usuario existe en auth.
+    const { error: perfilError } = await supabaseClient
+      .from('profiles')
+      .upsert(
+        {
+          id: userId,
+          email,
+          nombre_completo: nombreCompleto,
+          rol: 'maestro',
+          telefono,
+          activo: true
+        },
+        { onConflict: 'id' }
+      );
+
+    if (perfilError) {
+      console.error('❌ Error en upsert de perfil:', perfilError);
+      throw new Error('No se pudo crear/actualizar el perfil: ' + perfilError.message);
+    }
+
+    console.log('✅ Perfil del maestro creado/actualizado con éxito.');
+
+    // 4) Refrescar la interfaz de usuario.
+    await loadMaestros();
+    showNotification('Maestro creado exitosamente', 'success');
+    await renderView('maestros');
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error completo en createMaestro:', error);
+    showNotification('Error al crear maestro: ' + error.message, 'danger');
+    return false;
+  }
+}
+        // GRADOS
+        async function loadGrados() {
+            app.data.grados = await getData('grados');
+        }
+
+        async function createGrado(formData) {
+            const grado = await insertData('grados', {
+                nombre: formData.get('nombre'),
+                ciclo: formData.get('ciclo'),
+                orden: parseInt(formData.get('orden')),
+                institucion_id: app.data.institucion?.id || null
+            });
+            if (grado) {
+                await loadGrados();
+                renderView('grados');
+            }
+            return grado;
+        }
+
+        // SECCIONES
+        async function loadSecciones() {
+            app.data.secciones = await getData('secciones');
+        }
+
+        async function createSeccion(formData) {
+            const seccion = await insertData('secciones', {
+                grado_id: formData.get('grado_id'),
+                nombre: formData.get('nombre'),
+                año: parseInt(formData.get('año')),
+                cupo_maximo: parseInt(formData.get('cupo_maximo')) || 30
+            });
+            if (seccion) {
+                await loadSecciones();
+                renderView('grados');
+            }
+            return seccion;
+        }
+
+        // UNIDADES
+        async function loadUnidades() {
+            const año = new Date().getFullYear();
+            app.data.unidades = await getData('unidades', { año });
+        }
+
+        async function createUnidad(formData) {
+            const unidad = await insertData('unidades', {
+                numero: parseInt(formData.get('numero')),
+                nombre: formData.get('nombre'),
+                fecha_inicio: formData.get('fecha_inicio'),
+                fecha_fin: formData.get('fecha_fin'),
+                año: parseInt(formData.get('año')),
+                institucion_id: app.data.institucion?.id || null,
+                activo: true
+            });
+            if (unidad) {
+                await loadUnidades();
+                renderView('unidades');
+            }
+            return unidad;
+        }
+
+        // ==========================================
+        // INSCRIPCIONES DE ESTUDIANTES (NUEVO)
+        // ==========================================
+
+        async function loadInscripciones() {
+            const { data } = await supabaseClient
+                .from('estudiante_cursos')
+                .select(`
+                    *,
+                    cursos (
+                        id,
+                        nombre,
+                        codigo
+                    ),
+                    profiles (
+                        id,
+                        nombre_completo,
+                        codigo_estudiante
+                    )
+                `)
+                .eq('activo', true);
+            
+            app.data.inscripciones = data || [];
+        }
+
+        async function inscribirEstudiante(estudianteId, cursoId, seccionId = null) {
+            const año = new Date().getFullYear();
+
+            // Verificar si ya está inscrito
+            const { data: existing } = await supabaseClient
+                .from('estudiante_cursos')
+                .select('id')
+                .eq('estudiante_id', estudianteId)
+                .eq('curso_id', cursoId)
+                .eq('año', año)
+                .single();
+
+            if (existing) {
+                console.log('Estudiante ya inscrito en este curso');
+                return null;
+            }
+
+            return await insertData('estudiante_cursos', {
+                estudiante_id: estudianteId,
+                curso_id: cursoId,
+                seccion_id: seccionId,
+                año: año,
+                activo: true
+            });
+        }
+
+        async function inscribirGradoCompleto(gradoId, cursoId, seccionId = null) {
+            // Obtener todos los estudiantes del grado
+            const { data: estudiantes } = await supabaseClient
+                .from('profiles')
+                .select('id')
+                .eq('rol', 'estudiante')
+                .eq('grado_id', gradoId)
+                .eq('activo', true);
+
+            if (!estudiantes || estudiantes.length === 0) {
+                showNotification('No hay estudiantes en este grado', 'warning');
+                return 0;
+            }
+
+            let inscritos = 0;
+            for (const estudiante of estudiantes) {
+                const result = await inscribirEstudiante(estudiante.id, cursoId, seccionId);
+                if (result) inscritos++;
+            }
+
+            showNotification(`${inscritos} estudiantes inscritos exitosamente`, 'success');
+            return inscritos;
+        }
+
+        async function desinscribirEstudiante(inscripcionId) {
+            return await deleteData('estudiante_cursos', inscripcionId);
+        }
+
+        // ==========================================
+        // ASIGNACIONES
+        // ==========================================
+
+        async function loadAsignaciones() {
+            const { data } = await supabaseClient
+                .from('curso_asignaciones')
+                .select(`
+                    *,
+                    cursos (
+                        id,
+                        nombre,
+                        codigo
+                    ),
+                    profiles (
+                        id,
+                        nombre_completo,
+                        email
+                    ),
+                    secciones (
+                        id,
+                        nombre,
+                        grados (
+                            nombre
+                        )
+                    )
+                `)
+                .eq('activo', true);
+            
+            app.data.asignaciones = data || [];
+        }
+
+        async function asignarCursoMaestro(cursoId, maestroId, seccionId, año) {
+            const { data: existing } = await supabaseClient
+                .from('curso_asignaciones')
+                .select('id')
+                .eq('curso_id', cursoId)
+                .eq('maestro_id', maestroId)
+                .eq('seccion_id', seccionId)
+                .eq('año', año)
+                .single();
+
+            if (existing) {
+                showNotification('Esta asignación ya existe', 'warning');
+                return null;
+            }
+
+            return await insertData('curso_asignaciones', {
+                curso_id: cursoId,
+                maestro_id: maestroId,
+                seccion_id: seccionId,
+                año: parseInt(año),
+                activo: true
+            });
+        }
+
+        async function desasignarCurso(asignacionId) {
+            return await deleteData('curso_asignaciones', asignacionId);
+        }
+
+        async function loadCursosDisponibles() {
+            if (app.currentUser.rol === 'maestro') {
+                const { data: asignados } = await supabaseClient
+                    .from('curso_asignaciones')
+                    .select('curso_id')
+                    .eq('maestro_id', app.currentUser.id)
+                    .eq('activo', true);
+
+                const idsAsignados = asignados?.map(a => a.curso_id) || [];
+
+                const { data: todos } = await supabaseClient
+                    .from('cursos')
+                    .select('*, grados(nombre)');
+
+                app.data.cursosDisponibles = todos?.filter(c => !idsAsignados.includes(c.id)) || [];
+            }
+        }
+
+        async function autoAsignarCurso(cursoId, seccionId) {
+            const año = new Date().getFullYear();
+            const asignacion = await asignarCursoMaestro(cursoId, app.currentUser.id, seccionId, año);
+            
+            if (asignacion) {
+                await loadMisCursos();
+                await loadCursosDisponibles();
+                renderView('asignarme-cursos');
+            }
+        }
+
+        // ==========================================
+        // ACTIVIDADES
+        // ==========================================
+
+        async function loadMisCursos() {
+            if (app.currentUser.rol === 'maestro') {
+                const { data } = await supabaseClient
+                    .from('curso_asignaciones')
+                    .select(`
+                        *,
+                        cursos (
+                            id,
+                            nombre,
+                            codigo,
+                            descripcion
+                        ),
+                        secciones (
+                            id,
+                            nombre,
+                            grado_id
+                        )
+                    `)
+                    .eq('maestro_id', app.currentUser.id)
+                    .eq('activo', true);
+                
+                app.data.misCursos = data || [];
+            } else if (app.currentUser.rol === 'estudiante') {
+                const { data } = await supabaseClient
+                    .from('estudiante_cursos')
+                    .select(`
+                        *,
+                        cursos (
+                            id,
+                            nombre,
+                            codigo,
+                            descripcion
+                        )
+                    `)
+                    .eq('estudiante_id', app.currentUser.id)
+                    .eq('activo', true);
+                
+                app.data.misCursos = data || [];
+            }
+        }
+
+        async function loadActividades(cursoId, unidadId = null) {
+            let filters = { curso_id: cursoId };
+            if (unidadId) filters.unidad_id = unidadId;
+            
+            const { data } = await supabaseClient
+                .from('actividades')
+                .select('*')
+                .match(filters)
+                .order('created_at', { ascending: false });
+            
+            app.data.actividades = data || [];
+        }
+
+        async function createActividad(formData) {
+            const actividad = await insertData('actividades', {
+                unidad_id: formData.get('unidad_id'),
+                curso_id: formData.get('curso_id'),
+                titulo: formData.get('titulo'),
+                descripcion: formData.get('descripcion'),
+                tipo: formData.get('tipo'),
+                puntaje_maximo: parseFloat(formData.get('puntaje_maximo')),
+                fecha_entrega: formData.get('fecha_entrega') || null,
+                created_by: app.currentUser.id
+            });
+            
+            if (actividad) {
+                await loadActividades(formData.get('curso_id'), formData.get('unidad_id'));
+                verDetallesCurso(formData.get('curso_id'));
+            }
+            return actividad;
+        }
+
+        async function deleteActividad(id, cursoId) {
+            const success = await deleteData('actividades', id);
+            if (success) {
+                await loadActividades(cursoId);
+                verDetallesCurso(cursoId);
+            }
+        }
+
+        // NOTAS
+        async function loadNotas(actividadId) {
+            const { data } = await supabaseClient
+                .from('notas')
+                .select(`
+                    *,
+                    profiles (
+                        id,
+                        nombre_completo,
+                        codigo_estudiante
+                    )
+                `)
+                .eq('actividad_id', actividadId);
+            
+            return data || [];
+        }
+
+        async function guardarNota(estudianteId, actividadId, nota, observaciones = '') {
+            const { data: existing } = await supabaseClient
+                .from('notas')
+                .select('id')
+                .eq('estudiante_id', estudianteId)
+                .eq('actividad_id', actividadId)
+                .single();
+
+            if (existing) {
+                return await updateData('notas', existing.id, {
+                    nota: parseFloat(nota),
+                    observaciones,
+                    ingresado_por: app.currentUser.id
+                });
+            } else {
+                return await insertData('notas', {
+                    estudiante_id: estudianteId,
+                    actividad_id: actividadId,
+                    nota: parseFloat(nota),
+                    observaciones,
+                    ingresado_por: app.currentUser.id
+                });
+            }
+        }
+
+        // CÁLCULO DE PROMEDIOS
+        // ==========================================
+// ✅ NUEVAS FUNCIONES OPTIMIZADAS (AGREGAR)
+// ==========================================
+
+// NUEVA FUNCIÓN: Calcular todos los promedios de una vez
+async function calcularTodosPromedios(estudianteId, cursoIds) {
+    try {
+        // Obtener TODAS las notas del estudiante en una sola consulta
+        const { data: todasNotas, error } = await supabaseClient
+            .from('notas')
+            .select(`
+                nota,
+                actividades (
+                    curso_id,
+                    unidad_id
+                )
+            `)
+            .eq('estudiante_id', estudianteId)
+            .in('actividades.curso_id', cursoIds);
+
+        if (error) {
+            console.error('Error cargando notas:', error);
+            return { porCurso: {}, porUnidad: {} };
+        }
+
+        // Organizar notas por curso y unidad
+        const notasPorCurso = {};
+        const notasPorUnidad = {};
+
+        todasNotas?.forEach(n => {
+            if (!n.actividades) return;
+            
+            const cursoId = n.actividades.curso_id;
+            const unidadId = n.actividades.unidad_id;
+            const nota = parseFloat(n.nota);
+
+            // Por curso
+            if (!notasPorCurso[cursoId]) {
+                notasPorCurso[cursoId] = [];
+            }
+            notasPorCurso[cursoId].push(nota);
+
+            // Por unidad
+            const key = `${cursoId}_${unidadId}`;
+            if (!notasPorUnidad[key]) {
+                notasPorUnidad[key] = [];
+            }
+            notasPorUnidad[key].push(nota);
+        });
+
+        // Calcular promedios
+        const promediosPorCurso = {};
+        const promediosPorUnidad = {};
+
+        // Promedios por curso
+        Object.keys(notasPorCurso).forEach(cursoId => {
+            const notas = notasPorCurso[cursoId];
+            const suma = notas.reduce((acc, n) => acc + n, 0);
+            promediosPorCurso[cursoId] = (suma / notas.length).toFixed(2);
+        });
+
+        // Promedios por unidad
+        Object.keys(notasPorUnidad).forEach(key => {
+            const notas = notasPorUnidad[key];
+            const suma = notas.reduce((acc, n) => acc + n, 0);
+            promediosPorUnidad[key] = (suma / notas.length).toFixed(2);
+        });
+
+        return {
+            porCurso: promediosPorCurso,
+            porUnidad: promediosPorUnidad
+        };
+
+    } catch (error) {
+        console.error('Error en calcularTodosPromedios:', error);
+        return { porCurso: {}, porUnidad: {} };
+    }
+}
+
+// Variables de caché
+let cachePromedios = null;
+let cacheEstudianteId = null;
+
+// ✅ REEMPLAZO: calcularPromedioUnidad (optimizada con caché)
+    async function calcularPromedioUnidad(estudianteId, cursoId, unidadId) {
+        // Si no hay caché o es otro estudiante, calcular todo
+        if (!cachePromedios || cacheEstudianteId !== estudianteId) {
+            const cursoIds = app.data.misCursos?.map(mc => mc.curso_id) || [cursoId];
+            cachePromedios = await calcularTodosPromedios(estudianteId, cursoIds);
+            cacheEstudianteId = estudianteId;
+        }
+
+        const key = `${cursoId}_${unidadId}`;
+        return cachePromedios.porUnidad[key] || '0.00';
+    }
+
+// ✅ REEMPLAZO: calcularPromedioCurso (optimizada con caché)
+    async function calcularPromedioCurso(estudianteId, cursoId) {
+        // Si no hay caché o es otro estudiante, calcular todo
+        if (!cachePromedios || cacheEstudianteId !== estudianteId) {
+            const cursoIds = app.data.misCursos?.map(mc => mc.curso_id) || [cursoId];
+            cachePromedios = await calcularTodosPromedios(estudianteId, cursoIds);
+            cacheEstudianteId = estudianteId;
+        }
+
+        return cachePromedios.porCurso[cursoId] || '0.00';
+    }
+
+    // Función para limpiar caché cuando se actualizan notas
+    function limpiarCachePromedios() {
+        cachePromedios = null;
+        cacheEstudianteId = null;
+    }
+
+        // ==========================================
+        // LIBRO DE CALIFICACIONES (NUEVO)
+        // ==========================================
+
+        async function abrirLibroCalificaciones(cursoId) {
+            await loadActividades(cursoId);
+            
+            // Obtener estudiantes del curso
+            const { data: estudiantesCurso } = await supabaseClient
+                .from('estudiante_cursos')
+                .select(`
+                    estudiante_id,
+                    profiles (
+                        id,
+                        nombre_completo,
+                        codigo_estudiante
+                    )
+                `)
+                .eq('curso_id', cursoId)
+                .eq('activo', true);
+
+            if (!estudiantesCurso || estudiantesCurso.length === 0) {
+                showNotification('No hay estudiantes inscritos en este curso', 'warning');
+                return;
+            }
+
+            // Obtener todas las notas del curso
+            const actividadIds = app.data.actividades.map(a => a.id);
+            const { data: todasNotas } = await supabaseClient
+                .from('notas')
+                .select('*')
+                .in('actividad_id', actividadIds);
+
+            const notasMap = {};
+            todasNotas?.forEach(nota => {
+                const key = `${nota.estudiante_id}_${nota.actividad_id}`;
+                notasMap[key] = nota.nota;
+            });
+
+            const content = document.getElementById('mainContent');
+            content.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <span>📊 Libro de Calificaciones</span>
+                        <div class="btn-group">
+                            <button class="btn btn-success btn-sm" onclick="guardarTodasNotasLibro('${cursoId}')">
+                                💾 Guardar Todas las Notas
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="verDetallesCurso('${cursoId}')">
+                                ← Volver
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>💡 Instrucciones:</strong> Ingresa las notas directamente en la tabla. 
+                        Los cambios se guardan automáticamente al hacer clic en "Guardar Todas las Notas".
+                    </div>
+
+                    <div class="table-container">
+                        <table class="gradebook-table">
+                            <thead>
+                                <tr>
+                                    <th style="min-width: 200px;">Estudiante</th>
+                                    ${app.data.actividades.map(act => `
+                                        <th style="min-width: 100px;">
+                                            ${act.titulo}<br>
+                                            <small>(${act.puntaje_maximo} pts)</small>
+                                        </th>
+                                    `).join('')}
+                                    <th style="min-width: 100px;">Promedio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${estudiantesCurso.map(ec => {
+                                    const estudiante = ec.profiles;
+                                    let sumaNotas = 0;
+                                    let totalActividades = 0;
+
+                                    const filaCeldas = app.data.actividades.map(act => {
+                                        const key = `${estudiante.id}_${act.id}`;
+                                        const notaActual = notasMap[key] || '';
+                                        
+                                        if (notaActual) {
+                                            sumaNotas += parseFloat(notaActual);
+                                            totalActividades++;
+                                        }
+
+                                        return `
+                                            <td>
+                                                <input type="number"
+                                                       class="nota-gradebook"
+                                                       data-estudiante="${estudiante.id}"
+                                                       data-actividad="${act.id}"
+                                                       value="${notaActual}"
+                                                       min="0"
+                                                       max="${act.puntaje_maximo}"
+                                                       step="0.01"
+                                                       placeholder="0-${act.puntaje_maximo}">
+                                            </td>
+                                        `;
+                                    }).join('');
+
+                                    const promedio = totalActividades > 0 ? (sumaNotas / totalActividades).toFixed(2) : '0.00';
+
+                                    return `
+                                        <tr>
+                                            <td>
+                                                <strong>${estudiante.nombre_completo}</strong><br>
+                                                <small>${estudiante.codigo_estudiante || 'Sin código'}</small>
+                                            </td>
+                                            ${filaCeldas}
+                                            <td><strong>${promedio}</strong></td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            // Función global para guardar todas las notas
+            window.guardarTodasNotasLibro = async function(cursoId) {
+                const inputs = document.querySelectorAll('.nota-gradebook');
+                let guardadas = 0;
+
+                for (const input of inputs) {
+                    const nota = input.value;
+                    if (nota && nota.trim() !== '') {
+                        const estudianteId = input.dataset.estudiante;
+                        const actividadId = input.dataset.actividad;
+                        
+                        await guardarNota(estudianteId, actividadId, parseFloat(nota), '');
+                        guardadas++;
+                    }
+                }
+
+                showNotification(`${guardadas} notas guardadas exitosamente`, 'success');
+            };
+        }
+
+        // ==========================================
+        // MODALES (se mantienen los anteriores y se agregan nuevos)
+        // ==========================================
+
+        async function showInscribirGradoModal() {
+            await loadGrados();
+            await loadCursos();
+            await loadSecciones();
+
+            const modal = openModal(`
+                <div class="modal-header">
+                    <h2>📚 Inscribir Grado Completo</h2>
+                    <button class="close-modal" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <form id="inscribirGradoForm">
+                    <div class="form-group">
+                        <label class="form-label">Grado *</label>
+                        <select class="form-select" name="grado_id" required>
+                            <option value="">Seleccionar grado...</option>
+                            ${app.data.grados.map(g => `
+                                <option value="${g.id}">${g.nombre}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Curso *</label>
+                        <select class="form-select" name="curso_id" required>
+                            <option value="">Seleccionar curso...</option>
+                            ${app.data.cursos.map(c => `
+                                <option value="${c.id}">${c.nombre} (${c.codigo || 'Sin código'})</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Sección (opcional)</label>
+                        <select class="form-select" name="seccion_id">
+                            <option value="">Sin sección específica</option>
+                            ${app.data.secciones.map(s => `
+                                <option value="${s.id}">Sección ${s.nombre}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="alert alert-warning">
+                        <strong>⚠️ Atención:</strong> Se inscribirán TODOS los estudiantes activos del grado seleccionado.
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-success">Inscribir Grado Completo</button>
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById('inscribirGradoForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                const inscritos = await inscribirGradoCompleto(
+                    formData.get('grado_id'),
+                    formData.get('curso_id'),
+                    formData.get('seccion_id') || null
+                );
+
+                if (inscritos > 0) {
+                    closeModal(modal);
+                    await loadInscripciones();
+                    renderView('inscripciones');
+                }
+            });
+        }
+
+        async function showInscribirEstudianteModal() {
+            await loadEstudiantes();
+            await loadCursos();
+            await loadSecciones();
+
+            const modal = openModal(`
+                <div class="modal-header">
+                    <h2>👨‍🎓 Inscribir Estudiante Individual</h2>
+                    <button class="close-modal" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <form id="inscribirEstudianteForm">
+                    <div class="form-group">
+                        <label class="form-label">Estudiante *</label>
+                        <select class="form-select" name="estudiante_id" required>
+                            <option value="">Seleccionar estudiante...</option>
+                            ${app.data.estudiantes.map(e => `
+                                <option value="${e.id}">
+                                    ${e.nombre_completo} (${e.codigo_estudiante || 'Sin código'})
+                                    ${e.grados ? ` - ${e.grados.nombre}` : ''}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Curso *</label>
+                        <select class="form-select" name="curso_id" required>
+                            <option value="">Seleccionar curso...</option>
+                            ${app.data.cursos.map(c => `
+                                <option value="${c.id}">${c.nombre} (${c.codigo || 'Sin código'})</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Sección (opcional)</label>
+                        <select class="form-select" name="seccion_id">
+                            <option value="">Sin sección específica</option>
+                            ${app.data.secciones.map(s => `
+                                <option value="${s.id}">Sección ${s.nombre}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">Inscribir Estudiante</button>
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById('inscribirEstudianteForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                const inscrito = await inscribirEstudiante(
+                    formData.get('estudiante_id'),
+                    formData.get('curso_id'),
+                    formData.get('seccion_id') || null
+                );
+
+                if (inscrito) {
+                    closeModal(modal);
+                    await loadInscripciones();
+                    renderView('inscripciones');
+                }
+            });
+        }
+
+        // [Aquí van todos los modales anteriores: showCreateCursoModal, showCreateEstudianteModal, etc...]
+        // Por brevedad, mantengo los mismos del código anterior
+
+        function showCreateCursoModal() {
+            const modal = openModal(`
+                <div class="modal-header">
+                    <h2>✨ Crear Nuevo Curso</h2>
+                    <button class="close-modal" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <form id="createCursoForm">
+                    <div class="form-group">
+                        <label class="form-label">Nombre del Curso *</label>
+                        <input type="text" class="form-input" name="nombre" placeholder="Ej: Matemáticas" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Código</label>
+                        <input type="text" class="form-input" name="codigo" placeholder="Ej: MAT-101">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-textarea" name="descripcion" placeholder="Descripción del curso"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Color</label>
+                        <input type="color" class="form-input" name="color" value="#1877f2">
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">Crear Curso</button>
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById('createCursoForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const curso = await createCurso(formData);
+                if (curso) closeModal(modal);
+            });
+        }
+
+        async function showCreateEstudianteModal() {
+            await loadGrados();
+
+            const modal = openModal(`
+                <div class="modal-header">
+                    <h2>👨‍🎓 Crear Nuevo Estudiante</h2>
+                    <button class="close-modal" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <form id="createEstudianteForm">
+                    <div class="form-group">
+                        <label class="form-label">Nombre Completo *</label>
+                        <input type="text" class="form-input" name="nombre_completo" placeholder="Juan Pérez López" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-input" name="email" placeholder="estudiante@ejemplo.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contraseña *</label>
+                        <input type="password" class="form-input" name="password" value="Estudiante123" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Código de Estudiante</label>
+                        <input type="text" class="form-input" name="codigo_estudiante" placeholder="EST-2024-001">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Grado</label>
+                        <select class="form-select" name="grado_id">
+                            <option value="">Sin grado asignado</option>
+                            ${app.data.grados.map(g => `
+                                <option value="${g.id}">${g.nombre}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">Crear Estudiante</button>
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById('createEstudianteForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const success = await createEstudiante(formData);
+                if (success) closeModal(modal);
+            });
+        }
+
+        // ==========================================
+// FUNCIÓN showCreateMaestroModal CORREGIDA
+// ==========================================
+function showCreateMaestroModal() {
+    const modal = openModal(`
+        <div class="modal-header">
+            <h2>👨‍🏫 Crear Nuevo Maestro</h2>
+            <button class="close-modal" onclick="this.closest('.modal').remove()">×</button>
+        </div>
+        <form id="createMaestroForm">
+            <div class="form-group">
+                <label class="form-label">Nombre Completo *</label>
+                <input type="text" class="form-input" name="nombre_completo" required autofocus>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email *</label>
+                <input type="email" class="form-input" name="email" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Contraseña *</label>
+                <input type="password" class="form-input" name="password" value="Maestro123" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Teléfono</label>
+                <input type="text" class="form-input" name="telefono">
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">Crear Maestro</button>
+                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+            </div>
+        </form>
+    `);
+
+    document.getElementById('createMaestroForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creando...';
+        
+        const formData = new FormData(e.target);
+        const success = await createMaestro(formData);
+        
+        if (success) {
+            closeModal(modal);
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Crear Maestro';
+        }
+    });
+}
+
+        function showCreateGradoModal() {
+            const modal = openModal(`
+                <div class="modal-header">
+                    <h2>🎯 Crear Nuevo Grado</h2>
+                    <button class="close-modal" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <form id="createGradoForm">
+                    <div class="form-group">
+                        <label class="form-label">Nombre del Grado *</label>
+                        <input type="text" class="form-input" name="nombre" placeholder="Ej: 1ro Básico" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ciclo *</label>
+                        <select class="form-select" name="ciclo" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="primaria">Primaria</option>
+                            <option value="secundaria">Secundaria</option>
+                            <option value="bachillerato">Bachillerato</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Orden *</label>
+                        <input type="number" class="form-input" name="orden" min="1" required>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">Crear Grado</button>
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById('createGradoForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const grado = await createGrado(formData);
+                if (grado) closeModal(modal);
+            });
+        }
+
+        async function showCreateSeccionModal() {
+            await loadGrados();
+
+            const modal = openModal(`
+                <div class="modal-header">
+                    <h2>📋 Crear Nueva Sección</h2>
+                    <button class="close-modal" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <form id="createSeccionForm">
+                    <div class="form-group">
+                        <label class="form-label">Grado *</label>
+                        <select class="form-select" name="grado_id" required>
+                            <option value="">Seleccionar...</option>
+                            ${app.data.grados.map(g => `
+                                <option value="${g.id}">${g.nombre}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nombre de Sección *</label>
+                        <input type="text" class="form-input" name="nombre" placeholder="Ej: A, B, C" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Año *</label>
+                        <input type="number" class="form-input" name="año" value="${new Date().getFullYear()}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cupo Máximo</label>
+                        <input type="number" class="form-input" name="cupo_maximo" value="30" min="1">
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">Crear Sección</button>
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById('createSeccionForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const seccion = await createSeccion(formData);
+                if (seccion) closeModal(modal);
+            });
+        }
+
+        function showCreateUnidadModal() {
+            const modal = openModal(`
+                <div class="modal-header">
+                    <h2>📅 Crear Nueva Unidad</h2>
+                    <button class="close-modal" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <form id="createUnidadForm">
+                    <div class="form-group">
+                        <label class="form-label">Número de Unidad *</label>
+                        <input type="number" class="form-input" name="numero" min="1" max="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" class="form-input" name="nombre" placeholder="Ej: Primera Unidad" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fecha Inicio *</label>
+                        <input type="date" class="form-input" name="fecha_inicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fecha Fin *</label>
+                        <input type="date" class="form-input" name="fecha_fin" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Año *</label>
+                        <input type="number" class="form-input" name="año" value="${new Date().getFullYear()}" required>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">Crear Unidad</button>
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById('createUnidadForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const unidad = await createUnidad(formData);
+                if (unidad) closeModal(modal);
+            });
+        }
+
+        async function showAsignarCursoModal() {
+            await loadCursos();
+            await loadMaestros();
+            await loadSecciones();
+
+            const modal = openModal(`
+                <div class="modal-header">
+                    <h2>🎯 Asignar Curso a Maestro</h2>
+                    <button class="close-modal" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <form id="asignarCursoForm">
+                    <div class="form-group">
+                        <label class="form-label">Maestro *</label>
+                        <select class="form-select" name="maestro_id" required>
+                            <option value="">Seleccionar maestro...</option>
+                            ${app.data.maestros.map(m => `
+                                <option value="${m.id}">${m.nombre_completo} (${m.email})</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Curso *</label>
+                        <select class="form-select" name="curso_id" required>
+                            <option value="">Seleccionar curso...</option>
+                            ${app.data.cursos.map(c => `
+                                <option value="${c.id}">${c.nombre} (${c.codigo || 'Sin código'})</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Sección *</label>
+                        <select class="form-select" name="seccion_id" required>
+                            <option value="">Seleccionar sección...</option>
+                            ${app.data.secciones.map(s => `
+                                <option value="${s.id}">Sección ${s.nombre} (${new Date().getFullYear()})</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Año *</label>
+                        <input type="number" class="form-input" name="año" value="${new Date().getFullYear()}" required>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">Asignar Curso</button>
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById('asignarCursoForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                const asignacion = await asignarCursoMaestro(
+                    formData.get('curso_id'),
+                    formData.get('maestro_id'),
+                    formData.get('seccion_id'),
+                    formData.get('año')
+                );
+                
+                if (asignacion) {
+                    closeModal(modal);
+                    await loadAsignaciones();
+                    renderView('asignaciones');
+                }
+            });
+        }
+
+        function showCreateActividadModal(cursoId) {
+            const modal = openModal(`
+                <div class="modal-header">
+                    <h2>📝 Crear Nueva Actividad</h2>
+                    <button class="close-modal" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <form id="createActividadForm">
+                    <input type="hidden" name="curso_id" value="${cursoId}">
+                    <div class="form-group">
+                        <label class="form-label">Unidad *</label>
+                        <select class="form-select" name="unidad_id" required>
+                            <option value="">Seleccionar...</option>
+                            ${app.data.unidades.map(u => `
+                                <option value="${u.id}">Unidad ${u.numero}: ${u.nombre}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Título de la Actividad *</label>
+                        <input type="text" class="form-input" name="titulo" placeholder="Ej: Tarea de Álgebra" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-textarea" name="descripcion" placeholder="Descripción de la actividad"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Actividad *</label>
+                        <select class="form-select" name="tipo" required>
+                            <option value="tarea">Tarea</option>
+                            <option value="examen">Examen</option>
+                            <option value="proyecto">Proyecto</option>
+                            <option value="participacion">Participación</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Puntaje Máximo *</label>
+                        <input type="number" class="form-input" name="puntaje_maximo" value="100" min="1" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fecha de Entrega</label>
+                        <input type="datetime-local" class="form-input" name="fecha_entrega">
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">Crear Actividad</button>
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById('createActividadForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const actividad = await createActividad(formData);
+                if (actividad) closeModal(modal);
+            });
+        }
+
+        // ==========================================
+        // RENDERS
+        // ==========================================
+
+        function renderLogin() {
+            document.getElementById('app').innerHTML = `
+                <div class="login-container">
+                    <div class="login-box">
+                        <h1>🎓 Colplex</h1>
+                        <p style="text-align: center; color: #65676b; margin-bottom: 2rem;">
+                            Plataforma Educativa
+                        </p>
+                        <div id="loginError"></div>
+                        <form id="loginForm">
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-input" id="emailInput" name="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Contraseña</label>
+                                <input type="password" class="form-input" id="passwordInput" name="password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;" id="loginBtn">
+                                Iniciar Sesión
+                            </button>
+                        </form>
+                        <div class="alert alert-info mt-2" style="font-size: 0.875rem;">
+                            <strong>Usuario admin:</strong><br>
+                            admin@colplex.edu.gt / Admin123!
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('emailInput').value;
+                const password = document.getElementById('passwordInput').value;
+                const loginBtn = document.getElementById('loginBtn');
+                
+                loginBtn.disabled = true;
+                loginBtn.textContent = 'Iniciando...';
+                
+                await login(email, password);
+                
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Iniciar Sesión';
+            });
+        }
+
+        function renderApp() {
+            const iniciales = app.currentUser.nombre_completo
+                .split(' ')
+                .map(n => n[0])
+                .join('')
+                .toUpperCase()
+                .substring(0, 2);
+
+            document.getElementById('app').innerHTML = `
+                <nav class="navbar">
+                    <a href="#" class="navbar-brand" onclick="event.preventDefault(); changeView('dashboard');">
+                        🎓 Colplex
+                    </a>
+                    <div class="navbar-user">
+                        <span>${app.currentUser.nombre_completo}</span>
+                        <span class="badge badge-primary">${app.currentUser.rol}</span>
+                        <div class="user-avatar" onclick="showUserMenu()">${iniciales}</div>
+                    </div>
+                </nav>
+                <div class="main-container">
+                    ${renderSidebar()}
+                    <div class="content" id="mainContent">
+                        ${showLoading()}
+                    </div>
+                </div>
+            `;
+
+            renderView('dashboard');
+        }
+
+        function renderSidebar() {
+            const menuItems = getMenuByRole(app.currentUser.rol);
+            
+            return `
+                <aside class="sidebar">
+                    ${menuItems.map(item => `
+                        <div class="sidebar-item ${app.currentView === item.view ? 'active' : ''}" 
+                             onclick="changeView('${item.view}')">
+                            ${item.icon} ${item.label}
+                        </div>
+                    `).join('')}
+                    <div class="sidebar-item" onclick="logout()" style="color: var(--danger);">
+                        🚪 Cerrar Sesión
+                    </div>
+                </aside>
+            `;
+        }
+
+        function getMenuByRole(rol) {
+            const menus = {
+                admin: [
+                    { view: 'dashboard', icon: '📊', label: 'Dashboard' },
+                    { view: 'cursos', icon: '📚', label: 'Cursos' },
+                    { view: 'estudiantes', icon: '👨‍🎓', label: 'Estudiantes' },
+                    { view: 'maestros', icon: '👨‍🏫', label: 'Maestros' },
+                    { view: 'grados', icon: '🎯', label: 'Grados y Secciones' },
+                    { view: 'unidades', icon: '📅', label: 'Unidades' },
+                    { view: 'asignaciones', icon: '🔗', label: 'Asignaciones' },
+                    { view: 'inscripciones', icon: '📝', label: 'Inscripciones' }
+                ],
+                coordinador: [
+                    { view: 'dashboard', icon: '📊', label: 'Dashboard' },
+                    { view: 'estudiantes', icon: '👨‍🎓', label: 'Estudiantes' }
+                ],
+                maestro: [
+                    { view: 'dashboard', icon: '📊', label: 'Dashboard' },
+                    { view: 'mis-cursos', icon: '📚', label: 'Mis Cursos' },
+                    { view: 'asignarme-cursos', icon: '➕', label: 'Asignarme Cursos' }
+                ],
+                estudiante: [
+                    { view: 'dashboard', icon: '📊', label: 'Dashboard' },
+                    { view: 'mis-cursos', icon: '📚', label: 'Mis Cursos' },
+                    { view: 'mis-notas', icon: '📊', label: 'Mis Notas' }
+                ]
+            };
+            return menus[rol] || [];
+        }
+
+        async function renderView(viewName) {
+            app.currentView = viewName;
+            const content = document.getElementById('mainContent');
+            if (!content) return;
+
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) sidebar.outerHTML = renderSidebar();
+
+            content.innerHTML = showLoading();
+
+            let html = '';
+            try {
+                switch (viewName) {
+                    case 'dashboard':
+                        html = await renderDashboard();
+                        break;
+                    case 'cursos':
+                        html = await renderCursos();
+                        break;
+                    case 'estudiantes':
+                        html = await renderEstudiantes();
+                        break;
+                    case 'maestros':
+                        html = await renderMaestros();
+                        break;
+                    case 'grados':
+                        html = await renderGrados();
+                        break;
+                    case 'unidades':
+                        html = await renderUnidades();
+                        break;
+                    case 'asignaciones':
+                        html = await renderAsignaciones();
+                        break;
+                    case 'inscripciones':
+                        html = await renderInscripciones();
+                        break;
+                    case 'asignarme-cursos':
+                        html = await renderAsignarmeCursos();
+                        break;
+                    case 'mis-cursos':
+                        html = await renderMisCursosView();
+                        break;
+                    case 'mis-notas':
+                        html = await renderMisNotas();
+                        break;
+                    default:
+                        html = `<div class="card"><p>Vista "${viewName}" en desarrollo...</p></div>`;
+                }
+            } catch (error) {
+                console.error('Error renderizando:', error);
+                html = `<div class="card"><div class="alert alert-danger">Error: ${error.message}</div></div>`;
+            }
+
+            content.innerHTML = html;
+        }
+
+        async function renderDashboard() {
+            let stats = '';
+
+            if (app.currentUser.rol === 'admin') {
+                const estudiantes = await getData('profiles', { rol: 'estudiante' });
+                const maestros = await getData('profiles', { rol: 'maestro' });
+                const cursos = await getData('cursos');
+                const grados = await getData('grados');
+
+                stats = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>${estudiantes.length}</h3>
+                            <p>Estudiantes</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>${maestros.length}</h3>
+                            <p>Maestros</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>${cursos.length}</h3>
+                            <p>Cursos</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>${grados.length}</h3>
+                            <p>Grados</p>
+                        </div>
+                    </div>
+                `;
+            } else if (app.currentUser.rol === 'maestro') {
+                await loadMisCursos();
+                stats = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>${app.data.misCursos.length}</h3>
+                            <p>Mis Cursos</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        👋 Bienvenido, ${app.currentUser.nombre_completo}
+                    </div>
+                    <p>Rol: <span class="badge badge-primary">${app.currentUser.rol.toUpperCase()}</span></p>
+                    <div class="alert alert-success mt-2">
+                        ✅ Sistema operativo | ${app.data.institucion?.nombre || 'Plataforma Colplex'}
+                    </div>
+                </div>
+                ${stats}
+            `;
+        }
+
+        async function renderCursos() {
+            await loadCursos();
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <span>📚 Gestión de Cursos</span>
+                        <button class="btn btn-primary btn-sm" onclick="showCreateCursoModal()">
+                            + Nuevo Curso
+                        </button>
+                    </div>
+
+                    ${app.data.cursos.length > 0 ? `
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nombre</th>
+                                        <th>Descripción</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${app.data.cursos.map(c => `
+                                        <tr>
+                                            <td><span class="badge badge-primary">${c.codigo || 'N/A'}</span></td>
+                                            <td><strong>${c.nombre}</strong></td>
+                                            <td>${c.descripcion || '-'}</td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button class="btn btn-sm btn-secondary" onclick="editCurso('${c.id}')">
+                                                        ✏️ Editar
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteCurso('${c.id}')">
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📚</div>
+                            <h3>No hay cursos registrados</h3>
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        // ==========================================
+// FUNCIÓN renderEstudiantes ACTUALIZADA
+// ==========================================
+        async function renderEstudiantes() {
+            // Cargar estudiantes ANTES de renderizar
+            await loadEstudiantes();
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <span>👨‍🎓 Gestión de Estudiantes (${app.data.estudiantes.length})</span>
+                        <button class="btn btn-primary btn-sm" onclick="showCreateEstudianteModal()">
+                            + Nuevo Estudiante
+                        </button>
+                    </div>
+
+                    ${app.data.estudiantes.length > 0 ? `
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>Grado</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${app.data.estudiantes.map(e => `
+                                        <tr>
+                                            <td>${e.codigo_estudiante || 'N/A'}</td>
+                                            <td><strong>${e.nombre_completo}</strong></td>
+                                            <td>${e.email}</td>
+                                            <td>${e.grado_nombre || 'Sin grado'}</td>
+                                            <td>
+                                                <span class="badge ${e.activo ? 'badge-success' : 'badge-danger'}">
+                                                    ${e.activo ? 'Activo' : 'Inactivo'}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button class="btn btn-sm btn-secondary" onclick="editEstudiante('${e.id}')">
+                                                        ✏️
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteEstudiante('${e.id}')">
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">👨‍🎓</div>
+                            <h3>No hay estudiantes registrados</h3>
+                            <p>Haz clic en "+ Nuevo Estudiante" para crear el primero</p>
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        async function renderMaestros() {
+            await loadMaestros();
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <span>👨‍🏫 Gestión de Maestros</span>
+                        <button class="btn btn-primary btn-sm" onclick="showCreateMaestroModal()">
+                            + Nuevo Maestro
+                        </button>
+                    </div>
+
+                    ${app.data.maestros.length > 0 ? `
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>Teléfono</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${app.data.maestros.map(m => `
+                                        <tr>
+                                            <td><strong>${m.nombre_completo}</strong></td>
+                                            <td>${m.email}</td>
+                                            <td>${m.telefono || '-'}</td>
+                                            <td>
+                                                <span class="badge ${m.activo ? 'badge-success' : 'badge-danger'}">
+                                                    ${m.activo ? 'Activo' : 'Inactivo'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">👨‍🏫</div>
+                            <h3>No hay maestros registrados</h3>
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        async function renderGrados() {
+            await loadGrados();
+            await loadSecciones();
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <span>🎯 Grados y Secciones</span>
+                        <div class="btn-group">
+                            <button class="btn btn-primary btn-sm" onclick="showCreateGradoModal()">
+                                + Nuevo Grado
+                            </button>
+                            <button class="btn btn-success btn-sm" onclick="showCreateSeccionModal()">
+                                + Nueva Sección
+                            </button>
+                        </div>
+                    </div>
+
+                    ${app.data.grados.length > 0 ? `
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Ciclo</th>
+                                        <th>Orden</th>
+                                        <th>Secciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${app.data.grados.map(g => {
+                                        const secciones = app.data.secciones.filter(s => s.grado_id === g.id);
+                                        return `
+                                            <tr>
+                                                <td><strong>${g.nombre}</strong></td>
+                                                <td><span class="badge badge-primary">${g.ciclo}</span></td>
+                                                <td>${g.orden}</td>
+                                                <td>${secciones.map(s => s.nombre).join(', ') || 'Sin secciones'}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🎯</div>
+                            <h3>No hay grados registrados</h3>
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        async function renderUnidades() {
+            await loadUnidades();
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <span>📅 Unidades Académicas ${new Date().getFullYear()}</span>
+                        <button class="btn btn-primary btn-sm" onclick="showCreateUnidadModal()">
+                            + Nueva Unidad
+                        </button>
+                    </div>
+
+                    ${app.data.unidades.length > 0 ? `
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Nombre</th>
+                                        <th>Fecha Inicio</th>
+                                        <th>Fecha Fin</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${app.data.unidades.map(u => `
+                                        <tr>
+                                            <td><span class="badge badge-primary">${u.numero}</span></td>
+                                            <td><strong>${u.nombre}</strong></td>
+                                            <td>${new Date(u.fecha_inicio).toLocaleDateString()}</td>
+                                            <td>${new Date(u.fecha_fin).toLocaleDateString()}</td>
+                                            <td>
+                                                <span class="badge ${u.activo ? 'badge-success' : 'badge-danger'}">
+                                                    ${u.activo ? 'Activa' : 'Inactiva'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📅</div>
+                            <h3>No hay unidades configuradas</h3>
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        async function renderAsignaciones() {
+            await loadAsignaciones();
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <span>🔗 Asignaciones de Cursos a Maestros</span>
+                        <button class="btn btn-primary btn-sm" onclick="showAsignarCursoModal()">
+                            + Nueva Asignación
+                        </button>
+                    </div>
+
+                    ${app.data.asignaciones.length > 0 ? `
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Maestro</th>
+                                        <th>Curso</th>
+                                        <th>Sección</th>
+                                        <th>Año</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${app.data.asignaciones.map(a => `
+                                        <tr>
+                                            <td><strong>${a.profiles.nombre_completo}</strong></td>
+                                            <td>
+                                                ${a.cursos.nombre}
+                                                <span class="badge badge-info">${a.cursos.codigo || 'Sin código'}</span>
+                                            </td>
+                                            <td>
+                                                ${a.secciones?.grados?.nombre || 'N/A'} - Sección ${a.secciones?.nombre || 'N/A'}
+                                            </td>
+                                            <td>${a.año}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-danger" onclick="desasignarCurso('${a.id}')">
+                                                    🗑️ Desasignar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔗</div>
+                            <h3>No hay asignaciones registradas</h3>
+                            <p>Asigna cursos a maestros para comenzar</p>
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        async function renderInscripciones() {
+            await loadInscripciones();
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <span>📝 Inscripciones de Estudiantes</span>
+                        <div class="btn-group">
+                            <button class="btn btn-success btn-sm" onclick="showInscribirGradoModal()">
+                                📚 Inscribir Grado Completo
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="showInscribirEstudianteModal()">
+                                + Inscribir Estudiante
+                            </button>
+                        </div>
+                    </div>
+
+                    ${app.data.inscripciones.length > 0 ? `
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Estudiante</th>
+                                        <th>Código</th>
+                                        <th>Curso</th>
+                                        <th>Año</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${app.data.inscripciones.map(i => `
+                                        <tr>
+                                            <td><strong>${i.profiles.nombre_completo}</strong></td>
+                                            <td>${i.profiles.codigo_estudiante || 'N/A'}</td>
+                                            <td>
+                                                ${i.cursos.nombre}
+                                                <span class="badge badge-info">${i.cursos.codigo || 'N/A'}</span>
+                                            </td>
+                                            <td>${i.año}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-danger" onclick="desinscribirEstudiante('${i.id}')">
+                                                    🗑️ Desinscribir
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📝</div>
+                            <h3>No hay inscripciones registradas</h3>
+                            <p>Inscribe estudiantes a cursos para comenzar</p>
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        async function renderAsignarmeCursos() {
+            await loadCursosDisponibles();
+            await loadMisCursos();
+            await loadSecciones();
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        ➕ Asignarme a Cursos
+                    </div>
+
+                    <div class="alert alert-info mb-2">
+                        <strong>ℹ️ Instrucciones:</strong><br>
+                        Haz clic en "Asignarme" para inscribirte en un curso disponible.
+                    </div>
+
+                    ${app.data.cursosDisponibles.length > 0 ? `
+                        <h3>Cursos Disponibles</h3>
+                        ${app.data.cursosDisponibles.map(curso => `
+                            <div class="curso-disponible">
+                                <div>
+                                    <h4>${curso.nombre}</h4>
+                                    <p>${curso.descripcion || 'Sin descripción'}</p>
+                                    <span class="badge badge-info">${curso.codigo || 'Sin código'}</span>
+                                    ${curso.grados ? `<span class="badge badge-primary">${curso.grados.nombre}</span>` : ''}
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-success" onclick="mostrarSeccionesParaAsignar('${curso.id}', '${curso.nombre}')">
+                                        ➕ Asignarme
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    ` : `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">✅</div>
+                            <h3>No hay cursos disponibles</h3>
+                            <p>Ya estás asignado a todos los cursos o no hay cursos creados.</p>
+                        </div>
+                    `}
+
+                    ${app.data.misCursos.length > 0 ? `
+                        <h3 class="mt-2">Mis Cursos Actuales</h3>
+                        ${app.data.misCursos.map(mc => `
+                            <div class="asignacion-card">
+                                <div>
+                                    <strong>${mc.cursos.nombre}</strong>
+                                    <span class="badge badge-info">${mc.secciones?.nombre || 'Sin sección'}</span>
+                                </div>
+                                <button class="btn btn-sm btn-danger" onclick="desasignarCurso('${mc.id}')">
+                                    🗑️ Desasignarme
+                                </button>
+                            </div>
+                        `).join('')}
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        async function mostrarSeccionesParaAsignar(cursoId, cursoNombre) {
+            await loadSecciones();
+
+            const modal = openModal(`
+                <div class="modal-header">
+                    <h2>Seleccionar Sección</h2>
+                    <button class="close-modal" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <p>Curso: <strong>${cursoNombre}</strong></p>
+                <form id="autoAsignarForm">
+                    <div class="form-group">
+                        <label class="form-label">Sección *</label>
+                        <select class="form-select" name="seccion_id" required>
+                            <option value="">Seleccionar sección...</option>
+                            ${app.data.secciones.map(s => `
+                                <option value="${s.id}">Sección ${s.nombre} (${s.año})</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-success">✅ Asignarme</button>
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById('autoAsignarForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                await autoAsignarCurso(cursoId, formData.get('seccion_id'));
+                closeModal(modal);
+            });
+        }
+
+        async function renderMisCursosView() {
+        await loadMisCursos();
+
+        if (app.currentUser.rol === 'maestro') {
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        📚 Mis Cursos Asignados
+                    </div>
+
+                    ${app.data.misCursos.length > 0 ? `
+                        <div class="stats-grid">
+                            ${app.data.misCursos.map(mc => `
+                                <div class="stat-card" onclick="verDetallesCurso('${mc.curso_id}')">
+                                    <h3>${mc.cursos.nombre}</h3>
+                                    <p>Código: ${mc.cursos.codigo || 'N/A'}</p>
+                                    <p>Sección: ${mc.secciones?.nombre || 'N/A'}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📚</div>
+                            <h3>No tienes cursos asignados</h3>
+                            <p>Ve a "Asignarme Cursos" para inscribirte en un curso</p>
+                            <button class="btn btn-primary mt-2" onclick="changeView('asignarme-cursos')">
+                                ➕ Asignarme a un Curso
+                            </button>
+                        </div>
+                    `}
+                </div>
+            `;
+        } else if (app.currentUser.rol === 'estudiante') {
+            // VISTA COMPLETA PARA ESTUDIANTES
+            if (app.data.misCursos.length === 0) {
+                return `
+                    <div class="card">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📚</div>
+                            <h3>No estás inscrito en ningún curso</h3>
+                            <p>Contacta con tu administrador para que te inscriba en los cursos</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            let html = `
+                <div class="card">
+                    <div class="card-header">
+                        📚 Mis Cursos (${app.data.misCursos.length})
+                    </div>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                        Aquí puedes ver todos tus cursos, actividades pendientes y recursos disponibles
+                    </p>
+                </div>
+            `;
+
+            // Mostrar cada curso con sus detalles
+            for (const mc of app.data.misCursos) {
+                const curso = mc.cursos;
+                
+                // Obtener actividades del curso
+                const { data: actividades } = await supabaseClient
+                    .from('actividades')
+                    .select(`
+                        *,
+                        unidades (
+                            id,
+                            numero,
+                            nombre
+                        ),
+                        notas (
+                            nota,
+                            observaciones
+                        )
+                    `)
+                    .eq('curso_id', curso.id)
+                    .eq('notas.estudiante_id', app.currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                // Calcular estadísticas del curso
+                const totalActividades = actividades?.length || 0;
+                const actividadesConNota = actividades?.filter(a => a.notas && a.notas.length > 0).length || 0;
+                const actividadesPendientes = totalActividades - actividadesConNota;
+
+                // Calcular promedio del curso
+                const promedioCurso = await calcularPromedioCurso(app.currentUser.id, curso.id);
+
+                // Agrupar actividades por unidad
+                const actividadesPorUnidad = {};
+                if (actividades) {
+                    actividades.forEach(act => {
+                        const unidadId = act.unidad_id;
+                        if (!actividadesPorUnidad[unidadId]) {
+                            actividadesPorUnidad[unidadId] = [];
+                        }
+                        actividadesPorUnidad[unidadId].push(act);
+                    });
+                }
+
+                html += `
+                    <div class="card">
+                        <div class="card-header" style="background: linear-gradient(135deg, ${curso.color || '#1877f2'}, var(--facebook-blue-dark)); color: white; border-radius: ${getComputedStyle(document.documentElement).getPropertyValue('--radius')};">
+                            <div>
+                                <h2 style="color: white; margin: 0;">${curso.nombre}</h2>
+                                <p style="margin: 0; opacity: 0.9;">${curso.codigo || 'Sin código'}</p>
+                            </div>
+                            <div class="promedio-display" style="background: rgba(255,255,255,0.2); font-size: 1.2rem;">
+                                Promedio: ${promedioCurso}
+                            </div>
+                        </div>
+
+                        ${curso.descripcion ? `
+                            <div class="alert alert-info">
+                                <strong>📖 Descripción:</strong> ${curso.descripcion}
+                            </div>
+                        ` : ''}
+
+                        <!-- Estadísticas del curso -->
+                        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 1rem;">
+                            <div style="background: var(--facebook-blue-light); padding: 1rem; border-radius: var(--radius); text-align: center;">
+                                <h3 style="color: var(--facebook-blue); margin: 0;">${totalActividades}</h3>
+                                <p style="margin: 0; color: var(--text-secondary);">Total Actividades</p>
+                            </div>
+                            <div style="background: #d4edda; padding: 1rem; border-radius: var(--radius); text-align: center;">
+                                <h3 style="color: var(--success); margin: 0;">${actividadesConNota}</h3>
+                                <p style="margin: 0; color: var(--text-secondary);">Completadas</p>
+                            </div>
+                            <div style="background: #fff3cd; padding: 1rem; border-radius: var(--radius); text-align: center;">
+                                <h3 style="color: #856404; margin: 0;">${actividadesPendientes}</h3>
+                                <p style="margin: 0; color: var(--text-secondary);">Pendientes</p>
+                            </div>
+                        </div>
+
+                        <!-- Actividades por unidad -->
+                        ${Object.keys(actividadesPorUnidad).length > 0 ? `
+                            <h3 style="margin: 1rem 0;">📋 Actividades y Tareas</h3>
+                            ${Object.keys(actividadesPorUnidad).map(unidadId => {
+                                const acts = actividadesPorUnidad[unidadId];
+                                const unidad = acts[0]?.unidades;
+                                
+                                return `
+                                    <div style="margin-bottom: 1.5rem;">
+                                        <h4 style="color: var(--facebook-blue); margin-bottom: 0.5rem;">
+                                            📖 Unidad ${unidad?.numero || ''}: ${unidad?.nombre || 'Sin nombre'}
+                                        </h4>
+                                        
+                                        ${acts.map(act => {
+                                            const nota = act.notas && act.notas.length > 0 ? act.notas[0] : null;
+                                            const tieneNota = nota !== null;
+                                            const notaValor = nota?.nota || 0;
+                                            const estadoColor = tieneNota ? 
+                                                (notaValor >= 60 ? 'var(--success)' : 'var(--danger)') : 
+                                                'var(--warning)';
+
+                                            return `
+                                                <div class="actividad-item" style="border-left-color: ${estadoColor};">
+                                                    <div class="flex justify-between items-center">
+                                                        <div style="flex: 1;">
+                                                            <h5 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">
+                                                                ${act.titulo}
+                                                            </h5>
+                                                            ${act.descripcion ? `
+                                                                <p style="margin: 0 0 0.5rem 0; color: var(--text-secondary);">
+                                                                    ${act.descripcion}
+                                                                </p>
+                                                            ` : ''}
+                                                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                                                <span class="badge badge-${act.tipo === 'examen' ? 'danger' : act.tipo === 'proyecto' ? 'warning' : 'primary'}">
+                                                                    ${act.tipo}
+                                                                </span>
+                                                                <span class="badge badge-info">
+                                                                    Puntaje máximo: ${act.puntaje_maximo}
+                                                                </span>
+                                                                ${act.fecha_entrega ? `
+                                                                    <span class="badge badge-warning">
+                                                                        📅 Entrega: ${new Date(act.fecha_entrega).toLocaleDateString('es-ES', {
+                                                                            day: '2-digit',
+                                                                            month: 'short',
+                                                                            year: 'numeric',
+                                                                            hour: '2-digit',
+                                                                            minute: '2-digit'
+                                                                        })}
+                                                                    </span>
+                                                                ` : ''}
+                                                            </div>
+                                                        </div>
+                                                        <div style="text-align: center; min-width: 150px;">
+                                                            ${tieneNota ? `
+                                                                <div class="promedio-display ${getPromedioClass(notaValor)}" style="font-size: 1.5rem; padding: 0.5rem;">
+                                                                    ${notaValor}/${act.puntaje_maximo}
+                                                                </div>
+                                                                ${nota.observaciones ? `
+                                                                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                                                                        💬 ${nota.observaciones}
+                                                                    </p>
+                                                                ` : ''}
+                                                            ` : `
+                                                                <div style="background: var(--warning); color: white; padding: 0.5rem 1rem; border-radius: var(--radius); font-weight: 600;">
+                                                                    ⏳ Pendiente
+                                                                </div>
+                                                            `}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                `;
+                            }).join('')}
+                        ` : `
+                            <div class="alert alert-info">
+                                📝 No hay actividades publicadas en este curso aún
+                            </div>
+                        `}
+                    </div>
+                `;
+            }
+
+            return html;
+        }
+    }
+
+        async function verDetallesCurso(cursoId) {
+            await loadUnidades();
+            await loadActividades(cursoId);
+
+            const curso = app.data.misCursos.find(mc => mc.curso_id === cursoId)?.cursos;
+
+            const actividadesPorUnidad = {};
+            app.data.unidades.forEach(u => {
+                actividadesPorUnidad[u.id] = app.data.actividades.filter(a => a.unidad_id === u.id);
+            });
+
+            const content = document.getElementById('mainContent');
+            content.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <span>📚 ${curso.nombre}</span>
+                        <div class="btn-group">
+                            <button class="btn btn-info btn-sm" onclick="abrirLibroCalificaciones('${cursoId}')">
+                                📊 Libro de Calificaciones
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="renderView('mis-cursos')">
+                                ← Volver
+                            </button>
+                        </div>
+                    </div>
+                    <p>${curso.descripcion || 'Sin descripción'}</p>
+                </div>
+
+                ${app.data.unidades.length > 0 ? app.data.unidades.map(unidad => `
+                    <div class="card">
+                        <div class="card-header">
+                            <span>📖 Unidad ${unidad.numero}: ${unidad.nombre}</span>
+                            <button class="btn btn-primary btn-sm" onclick="showCreateActividadModal('${cursoId}')">
+                                + Nueva Actividad
+                            </button>
+                        </div>
+
+                        ${actividadesPorUnidad[unidad.id]?.length > 0 ? `
+                            ${actividadesPorUnidad[unidad.id].map(act => `
+                                <div class="actividad-item">
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <h4>${act.titulo}</h4>
+                                            <p>${act.descripcion || ''}</p>
+                                            <div class="mt-1">
+                                                <span class="badge badge-${act.tipo === 'examen' ? 'danger' : act.tipo === 'proyecto' ? 'warning' : 'primary'}">
+                                                    ${act.tipo}
+                                                </span>
+                                                <span class="badge badge-success">
+                                                    Max: ${act.puntaje_maximo} pts
+                                                </span>
+                                                ${act.fecha_entrega ? `
+                                                    <span class="badge badge-warning">
+                                                        📅 ${new Date(act.fecha_entrega).toLocaleDateString()}
+                                                    </span>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-danger" onclick="deleteActividad('${act.id}', '${cursoId}')">
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        ` : `
+                            <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+                                No hay actividades en esta unidad. Haz clic en "+ Nueva Actividad"
+                            </p>
+                        `}
+                    </div>
+                `).join('') : `
+                    <div class="card">
+                        <div class="alert alert-warning">
+                            ⚠️ No hay unidades configuradas. El administrador debe crear las unidades académicas primero.
+                        </div>
+                    </div>
+                `}
+            `;
+        }
+
+        async function renderMisNotas() {
+            await loadMisCursos();
+
+            if (app.data.misCursos.length === 0) {
+                return `
+                    <div class="card">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📊</div>
+                            <h3>No estás inscrito en ningún curso</h3>
+                            <p>Contacta con tu administrador para que te inscriba</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Cargar unidades
+            await loadUnidades();
+
+            // Calcular promedio general de todos los cursos
+            let sumaPromedios = 0;
+            let cursosConNotas = 0;
+
+            for (const mc of app.data.misCursos) {
+                const promedio = await calcularPromedioCurso(app.currentUser.id, mc.curso_id);
+                if (parseFloat(promedio) > 0) {
+                    sumaPromedios += parseFloat(promedio);
+                    cursosConNotas++;
+                }
+            }
+
+            const promedioGeneral = cursosConNotas > 0 ? (sumaPromedios / cursosConNotas).toFixed(2) : '0.00';
+
+            let html = `
+                <!-- Encabezado de Boleta -->
+                <div class="card">
+                    <div style="text-align: center; padding: 2rem; background: linear-gradient(135deg, var(--facebook-blue), var(--facebook-blue-dark)); color: white; border-radius: var(--radius);">
+                        <h1 style="margin: 0; color: white;">📋 BOLETA DE CALIFICACIONES</h1>
+                        <h2 style="margin: 0.5rem 0; color: white;">${app.data.institucion?.nombre || 'Instituto Educativo'}</h2>
+                        <p style="margin: 0; opacity: 0.9;">Año Lectivo ${new Date().getFullYear()}</p>
+                    </div>
+                </div>
+
+                <!-- Datos del Estudiante -->
+                <div class="card">
+                    <div class="card-header" style="background: var(--facebook-blue-light);">
+                        <span>👨‍🎓 Datos del Estudiante</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                        <div>
+                            <strong>Nombre:</strong> ${app.currentUser.nombre_completo}
+                        </div>
+                        <div>
+                            <strong>Código:</strong> ${app.currentUser.codigo_estudiante || 'N/A'}
+                        </div>
+                        <div>
+                            <strong>Email:</strong> ${app.currentUser.email}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Calificaciones Tipo Boleta -->
+                <div class="card">
+                    <div class="card-header">
+                        📊 Calificaciones por Curso y Unidad
+                    </div>
+
+                    <div class="table-container">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead style="background: var(--facebook-blue); color: white;">
+                                <tr>
+                                    <th style="padding: 1rem; text-align: left; border: 1px solid var(--border-color);">CURSO</th>
+                                    ${app.data.unidades.map(u => `
+                                        <th style="padding: 1rem; text-align: center; border: 1px solid var(--border-color);">
+                                            Unidad ${u.numero}
+                                        </th>
+                                    `).join('')}
+                                    <th style="padding: 1rem; text-align: center; border: 1px solid var(--border-color); background: var(--facebook-blue-dark);">
+                                        PROMEDIO
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+
+            // Recorrer cada curso
+            for (const mc of app.data.misCursos) {
+                const curso = mc.cursos;
+                const promedioCurso = await calcularPromedioCurso(app.currentUser.id, curso.id);
+                
+                html += `
+                    <tr style="border-bottom: 2px solid var(--border-color);">
+                        <td style="padding: 1rem; font-weight: 600; border: 1px solid var(--border-color);">
+                            ${curso.nombre}
+                            <br><small style="color: var(--text-secondary); font-weight: normal;">${curso.codigo || ''}</small>
+                        </td>
+                `;
+
+                // Mostrar nota de cada unidad
+                for (const unidad of app.data.unidades) {
+                    const promedioUnidad = await calcularPromedioUnidad(app.currentUser.id, curso.id, unidad.id);
+                    const notaNumero = parseFloat(promedioUnidad);
+                    
+                    if (notaNumero > 0) {
+                        const colorFondo = notaNumero >= 90 ? '#d4edda' : 
+                                           notaNumero >= 75 ? '#e7f3ff' : 
+                                           notaNumero >= 60 ? '#fff3cd' : '#f8d7da';
+                        const colorTexto = notaNumero >= 90 ? 'var(--success)' : 
+                                           notaNumero >= 75 ? 'var(--facebook-blue)' : 
+                                           notaNumero >= 60 ? '#856404' : 'var(--danger)';
+                        
+                        html += `
+                            <td style="padding: 1rem; text-align: center; border: 1px solid var(--border-color); background: ${colorFondo};">
+                                <strong style="font-size: 1.25rem; color: ${colorTexto};">${promedioUnidad}</strong>
+                            </td>
+                        `;
+                    } else {
+                        html += `
+                            <td style="padding: 1rem; text-align: center; border: 1px solid var(--border-color); background: #f8f9fa;">
+                                <span style="color: var(--text-secondary);">-</span>
+                            </td>
+                        `;
+                    }
+                }
+
+                // Promedio del curso
+                const promNumero = parseFloat(promedioCurso);
+                const colorPromFondo = promNumero >= 90 ? 'var(--success)' : 
+                                       promNumero >= 75 ? 'var(--facebook-blue)' : 
+                                       promNumero >= 60 ? 'var(--warning)' : 'var(--danger)';
+
+                html += `
+                        <td style="padding: 1rem; text-align: center; border: 1px solid var(--border-color); background: ${colorPromFondo}; color: white;">
+                            <strong style="font-size: 1.5rem;">${promedioCurso}</strong>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Promedio General -->
+                <div class="card">
+                    <div style="text-align: center; padding: 2rem;">
+                        <h2 style="margin-bottom: 1rem; color: var(--text-secondary);">PROMEDIO GENERAL DEL AÑO</h2>
+                        <div class="promedio-display ${getPromedioClass(promedioGeneral)}" style="font-size: 3rem; padding: 2rem; margin: 0 auto; max-width: 400px;">
+                            ${promedioGeneral}
+                        </div>
+                        <div style="margin-top: 1.5rem;">
+                            <span style="font-size: 1.5rem; font-weight: 600; color: ${parseFloat(promedioGeneral) >= 60 ? 'var(--success)' : 'var(--danger)'};">
+                                ${parseFloat(promedioGeneral) >= 60 ? '✅ PROMOVIDO' : '❌ NO PROMOVIDO'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leyenda de Calificaciones -->
+                <div class="card">
+                    <div class="card-header">
+                        📖 Escala de Calificaciones
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div style="padding: 1rem; background: #d4edda; border-radius: var(--radius); text-align: center;">
+                            <strong style="color: var(--success);">90 - 100</strong>
+                            <p style="margin: 0.5rem 0 0 0;">Excelente</p>
+                        </div>
+                        <div style="padding: 1rem; background: #e7f3ff; border-radius: var(--radius); text-align: center;">
+                            <strong style="color: var(--facebook-blue);">75 - 89</strong>
+                            <p style="margin: 0.5rem 0 0 0;">Muy Bueno</p>
+                        </div>
+                        <div style="padding: 1rem; background: #fff3cd; border-radius: var(--radius); text-align: center;">
+                            <strong style="color: #856404;">60 - 74</strong>
+                            <p style="margin: 0.5rem 0 0 0;">Aprobado</p>
+                        </div>
+                        <div style="padding: 1rem; background: #f8d7da; border-radius: var(--radius); text-align: center;">
+                            <strong style="color: var(--danger);">0 - 59</strong>
+                            <p style="margin: 0.5rem 0 0 0;">Reprobado</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen por Curso -->
+                <div class="card">
+                    <div class="card-header">
+                        📈 Resumen por Curso
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+            `;
+
+            for (const mc of app.data.misCursos) {
+                const curso = mc.cursos;
+                const promedioCurso = await calcularPromedioCurso(app.currentUser.id, curso.id);
+                const promNumero = parseFloat(promedioCurso);
+                
+                html += `
+                    <div style="border: 2px solid ${promNumero >= 60 ? 'var(--success)' : 'var(--danger)'}; border-radius: var(--radius); padding: 1rem;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: var(--facebook-blue);">${curso.nombre}</h4>
+                        <div style="font-size: 2rem; font-weight: 700; color: ${promNumero >= 60 ? 'var(--success)' : 'var(--danger)'}; text-align: center; margin: 1rem 0;">
+                            ${promedioCurso}
+                        </div>
+                        <div style="text-align: center;">
+                            <span class="badge ${promNumero >= 60 ? 'badge-success' : 'badge-danger'}">
+                                ${promNumero >= 60 ? '✅ Aprobado' : '❌ Reprobado'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            return html;
+        }
+
+        // ==========================================
+        // FUNCIONES GLOBALES
+        // ==========================================
+        function changeView(viewName) {
+            renderView(viewName);
+        }
+
+        function showUserMenu() {
+            const modal = openModal(`
+                <div class="modal-header">
+                    <h2>👤 Mi Perfil</h2>
+                    <button class="close-modal" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <p><strong>Nombre:</strong> ${app.currentUser.nombre_completo}</p>
+                <p><strong>Email:</strong> ${app.currentUser.email}</p>
+                <p><strong>Rol:</strong> <span class="badge badge-primary">${app.currentUser.rol}</span></p>
+                <button class="btn btn-danger mt-2" onclick="logout(); this.closest('.modal').remove();">
+                    🚪 Cerrar Sesión
+                </button>
+            `);
+        }
+
+        // ==========================================
+        // INICIALIZACIÓN
+        // ==========================================
+        async function init() {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                
+                if (session) {
+                    const loaded = await loadUserProfile(session.user.id);
+                    if (loaded) {
+                        renderApp();
+                    } else {
+                        renderLogin();
+                    }
+                } else {
+                    renderLogin();
+                }
+
+                supabaseClient.auth.onAuthStateChange(async (event, session) => {
+                    if (event === 'SIGNED_IN' && session) {
+                        await loadUserProfile(session.user.id);
+                        renderApp();
+                    } else if (event === 'SIGNED_OUT') {
+                        app.currentUser = null;
+                        renderLogin();
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error de inicialización:', error);
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
